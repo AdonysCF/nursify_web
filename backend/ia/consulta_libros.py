@@ -15,35 +15,45 @@ cliente = genai.Client(api_key=GEMINI_API_KEY)
 
 def _ejecutar_con_fallback(prompt: str, schema_salida):
     """
-    Intenta generar contenido. Si el servidor de Google devuelve 503 (saturado),
-    reintenta automáticamente con un modelo de respaldo sin romper la app.
+    Ejecuta la llamada con modelos válidos y desactiva el 'thinking_budget' 
+    para que responda de inmediato en 5 segundos sin causar timeouts.
     """
-    modelos_candidatos = [MODELO_GEMINI, "gemini-3.5-flash", "gemini-3.6-flash", "gemini-3.8-flash"]
-    # Eliminar duplicados manteniendo el orden
+    # Solo modelos oficiales que existen en la API
+    modelos_candidatos = [
+        MODELO_GEMINI, 
+        "gemini-3.5-flash", 
+        "gemini-3.6-flash", 
+        "gemini-3.8-flash"
+    ]
     modelos = list(dict.fromkeys(modelos_candidatos))
 
     ultimo_error = None
     for modelo in modelos:
         try:
+            # Desactivamos el tiempo de pensamiento para respuesta ultrarrápida
+            config_params = {
+                "response_mime_type": "application/json",
+                "response_schema": schema_salida,
+                "temperature": 0.2
+            }
+            
+            # Si el SDK soporta thinking_config, apagamos el gasto de tiempo
+            try:
+                config_params["thinking_config"] = types.ThinkingConfig(thinking_budget=0)
+            except Exception:
+                pass
+
             return cliente.models.generate_content(
                 model=modelo,
                 contents=prompt,
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    response_schema=schema_salida,
-                    temperature=0.2
-                )
+                config=types.GenerateContentConfig(**config_params)
             )
         except Exception as e:
             ultimo_error = e
             msg = str(e).lower()
-            if "503" in msg or "high demand" in msg or "unavailable" in msg:
-                print(f"Aviso: Modelo {modelo} saturado temporalmente (503). Probando alternativa...")
-                time.sleep(1.5)
-                continue
-            else:
-                # Si es un error distinto a saturación de servidor, lanzarlo
-                raise e
+            print(f"Aviso en modelo {modelo}: {e}. Probando siguiente...")
+            time.sleep(1)
+            continue
 
     raise ultimo_error
 
