@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Asistente PAE con IA</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <nav class="navbar">
+    <h1>🩺 Asistente de Enfermería - Generador PAE</h1>
+    <div>
+      <a href="index.html">Nuevo Caso</a>
+      <a href="historial.html">Historial de Reportes</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <!-- Indicadores de Pasos -->
+    <div class="steps-nav">
+      <div class="step-indicator active" id="ind-1">1. Cargar Caso</div>
+      <div class="step-indicator" id="ind-2">2. Valoración</div>
+      <div class="step-indicator" id="ind-3">3. Diagnósticos NANDA</div>
+      <div class="step-indicator" id="ind-4">4. Plan PAE y Descarga</div>
+    </div>
+
+    <!-- Spinner de Carga -->
+    <div class="loader-container" id="loader">
+      <div class="spinner"></div>
+      <p style="margin-top: 1rem; font-weight: 600;" id="loader-msg">La IA está procesando los datos clínicos...</p>
+    </div>
+
+    <!-- PASO 1: Cargar Caso -->
+    <div class="card" id="step-1">
+      <h2>Paso 1: Ingresar Caso Clínico</h2>
+      <div class="form-group">
+        <label>Opción A: Subir archivo PDF del caso clínico</label>
+        <input type="file" id="archivo-pdf" accept=".pdf">
+      </div>
+      <div style="text-align: center; margin: 1rem 0; font-weight: bold; color: var(--text-muted);">— O —</div>
+      <div class="form-group">
+        <label>Opción B: Pegar texto del caso clínico</label>
+        <textarea id="texto-caso" rows="8" placeholder="Pega aquí la descripción del caso clínico, evolución médica o notas de enfermería..."></textarea>
+      </div>
+      <div class="actions-bar" style="justify-content: flex-end;">
+        <button class="btn" onclick="procesarCasoClinico()">Analizar con IA ➔</button>
+      </div>
+    </div>
+
+    <!-- PASO 2: Validar Datos -->
+    <div class="card" id="step-2" style="display: none;">
+      <h2>Paso 2: Revisar y Validar Datos de Valoración</h2>
+      <div class="grid-3">
+        <div class="form-group">
+          <label>Nombre del Paciente</label>
+          <input type="text" id="val-nombre">
+        </div>
+        <div class="form-group">
+          <label>Edad</label>
+          <input type="number" id="val-edad">
+        </div>
+        <div class="form-group">
+          <label>Sexo</label>
+          <input type="text" id="val-sexo">
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Cama / Servicio</label>
+          <input type="text" id="val-cama">
+        </div>
+        <div class="form-group">
+          <label>Motivo de Ingreso</label>
+          <input type="text" id="val-motivo">
+        </div>
+      </div>
+
+      <h3 style="margin: 1rem 0 0.5rem; font-size: 1.1rem;">Signos Vitales</h3>
+      <div class="grid-3">
+        <input type="text" id="sv-pa" placeholder="P.A. (ej: 120/80)">
+        <input type="text" id="sv-fc" placeholder="F.C. (ej: 82 lpm)">
+        <input type="text" id="sv-fr" placeholder="F.R. (ej: 18 rpm)">
+      </div>
+      <div class="grid-2" style="margin-top: 0.5rem;">
+        <input type="text" id="sv-temp" placeholder="Temperatura (ej: 36.5 °C)">
+        <input type="text" id="sv-sat" placeholder="Sat. O2 (ej: 98%)">
+      </div>
+
+      <div class="form-group" style="margin-top: 1rem;">
+        <label>Antecedentes Clínicos</label>
+        <textarea id="val-antecedentes" rows="2"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Datos Subjetivos (Lo que el paciente refiere)</label>
+        <textarea id="val-subjetivos" rows="3"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Datos Objetivos (Signos, examen físico y laboratorio)</label>
+        <textarea id="val-objetivos" rows="3"></textarea>
+      </div>
+
+      <div class="actions-bar">
+        <button class="btn btn-secondary" onclick="irAPaso(1)">⬅ Volver</button>
+        <button class="btn" onclick="solicitarDiagnosticos()">Sugerir Diagnósticos NANDA ➔</button>
+      </div>
+    </div>
+
+    <!-- PASO 3: Seleccionar Diagnósticos -->
+    <div class="card" id="step-3" style="display: none;">
+      <h2>Paso 3: Diagnósticos NANDA Sugeridos</h2>
+      <p style="margin-bottom: 1rem; color: var(--text-muted);">Selecciona los diagnósticos que deseas incluir en el plan de cuidados:</p>
+      
+      <div id="lista-diagnosticos"></div>
+
+      <div class="actions-bar">
+        <button class="btn btn-secondary" onclick="irAPaso(2)">⬅ Volver</button>
+        <button class="btn" onclick="generarPlanFinal()">Generar Plan PAE Completo ➔</button>
+      </div>
+    </div>
+
+    <!-- PASO 4: Informe Final y Descarga -->
+    <div class="card" id="step-4" style="display: none;">
+      <h2>Paso 4: Informe PAE Generado</h2>
+      <div style="background: #EBF8FF; border-left: 4px solid var(--primary); padding: 1rem; margin-bottom: 1.5rem; border-radius: 4px;">
+        <p><strong>Paciente:</strong> <span id="res-paciente"></span></p>
+        <p><strong>Resumen clínico:</strong> <span id="res-evaluacion"></span></p>
+      </div>
+
+      <div id="tablas-pae-resultado"></div>
+
+      <div class="actions-bar" style="margin-top: 2rem;">
+        <button class="btn btn-secondary" onclick="irAPaso(1)">Crear Nuevo Caso</button>
+        <a id="btn-descargar-word" class="btn btn-success" href="#" target="_blank">📥 Descargar Informe en Word (.docx)</a>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

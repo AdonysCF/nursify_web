@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Historial de Reportes PAE</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <nav class="navbar">
+    <h1>🩺 Asistente de Enfermería - Historial</h1>
+    <div>
+      <a href="index.html">Nuevo Caso</a>
+      <a href="historial.html">Historial de Reportes</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="card">
+      <h2>Historial de Pacientes y Reportes Guardados</h2>
+      <div class="form-group">
+        <input type="text" id="buscador" placeholder="Buscar por nombre de paciente..." oninput="filtrarReportes()">
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Paciente</th>
+            <th>Edad</th>
+            <th>Cama</th>
+            <th>Fecha</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-cuerpo">
+          <!-- Se llena dinámicamente con JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="js/historial.js"></script>
+</body>
+</html>
