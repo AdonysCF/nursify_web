@@ -21,9 +21,9 @@ def _ejecutar_con_fallback(prompt: str, schema_salida):
     # Solo modelos oficiales que existen en la API
     modelos_candidatos = [
         MODELO_GEMINI, 
-        "gemini-3.5-flash", 
-        "gemini-3.6-flash", 
-        "gemini-3.8-flash"
+        "gemini-3-flash", 
+        "gemini-2.5-flash", 
+        "gemini-3.5-flash"
     ]
     modelos = list(dict.fromkeys(modelos_candidatos))
 
